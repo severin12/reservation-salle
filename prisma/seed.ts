@@ -31,12 +31,13 @@ async function main() {
 
   const rooms = [];
   for (const roomData of roomsData) {
-    const room = await prisma.room.upsert({
-      where: { name: roomData.name },
-      update: {},
-      create: roomData,
-    });
-    rooms.push(room);
+    const existing = await prisma.room.findFirst({ where: { name: roomData.name } });
+    if (existing) {
+      rooms.push(existing);
+    } else {
+      const room = await prisma.room.create({ data: roomData });
+      rooms.push(room);
+    }
   }
 
   console.log('✅ Salles créées:', rooms.length);
@@ -50,7 +51,7 @@ async function main() {
       {
         roomId: salleA101.id,
         userId: user.id,
-        date: new Date('2026-06-15'), // Date future
+        date: new Date('2026-06-15'),
         startTime: '09:00',
         endTime: '10:30',
         reason: 'Réunion équipe',
